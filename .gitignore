@@ -1,0 +1,84 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+
+# Virtualenvs
+env/
+venv/
+ENV/
+venv.bak/
+pip-wheel-metadata/
+*.egg-info/
+
+# Byte-compiled / caches
+.pytest_cache/
+.mypy_cache/
+coverage.xml
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbs and other system files
+Thumbs.db
+desktop.ini
+
+# Data and outputs (large or derived)
+data/downloads/
+data/cache/
+data/processed/
+outputs/
+logs/
+reports/*.html
+reports/assets/
+reports/*.png
+reports/*.svg
+
+# ML artifact binaries & checkpoints (do NOT commit model weights)
+models/**/best_model/*
+models/**/checkpoints/*
+models/**/raw_weights/*
+models/*.safetensors
+models/**/*.safetensors
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.h5
+*.tar.gz
+
+# Hugging Face cache (if present in repo)
+.hf/
+huggingface/
+huggingface_hub/
+datasets_cache/
+
+# Temporary
+*.tmp
+*.temp
+*-checkpoint
+
+# Editor backups
+*~ 
+*.swp
+
+# Secrets (remind devs)
+.env
+.env.*.local
+secrets.json
+credentials.json
