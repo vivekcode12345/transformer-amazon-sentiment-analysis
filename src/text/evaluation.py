@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..config import PATH_CONFIG, TEXT_CONFIG
+from configs.config import PATH_CONFIG, TEXT_CONFIG
 from .metrics import compute_detailed_metrics, print_detailed_metrics
 from .model import load_model
 from .preprocessing import (

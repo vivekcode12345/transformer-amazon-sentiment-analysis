@@ -14,6 +14,14 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 
+from src.utils.metrics import (
+    _to_label_ids,
+    compute_basic_metrics,
+    compute_detailed_metrics,
+    compute_trainer_metrics,
+    print_detailed_metrics,
+)
+
 
 def _to_label_ids(predictions: np.ndarray) -> np.ndarray:
     """Convert model outputs (logits) into hard class labels."""

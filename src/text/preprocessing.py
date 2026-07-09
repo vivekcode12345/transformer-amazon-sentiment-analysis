@@ -8,7 +8,7 @@ from typing import Iterable
 from datasets import Dataset, DatasetDict, load_dataset
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
-from ..config import TEXT_CONFIG
+from configs.config import TEXT_CONFIG
 
 
 def stream_tokenized_train(
@@ -172,24 +172,44 @@ def load_amazon_polarity_streamed(
     train_samples: int = 2000,
     test_samples: int = 500,
 ) -> DatasetDict:
-    """Load a real but small Amazon Polarity subset using streaming mode."""
-    candidate_dataset_ids = ["fancyzhx/amazon_polarity", "amazon_polarity"]
+    """Load a real but small Amazon Polarity subset using streaming mode.
+    
+    Attempts streaming first for memory efficiency. If streaming fails due to
+    network/server issues, automatically falls back to non-streaming mode which
+    will use cached data if available.
+    """
+    dataset_id = "fancyzhx/amazon_polarity"
     last_error: Exception | None = None
 
-    for dataset_id in candidate_dataset_ids:
-        try:
-            print(f"Trying streaming dataset source: {dataset_id}")
-            train_ds = _materialize_stream_subset(dataset_id, "train", train_samples)
-            test_ds = _materialize_stream_subset(dataset_id, "test", test_samples)
+    # Try streaming first
+    try:
+        print(f"Trying streaming mode for dataset: {dataset_id}")
+        train_ds = _materialize_stream_subset(dataset_id, "train", train_samples)
+        test_ds = _materialize_stream_subset(dataset_id, "test", test_samples)
 
-            dataset = DatasetDict({"train": train_ds, "test": test_ds})
-            print(f"Loaded dataset from: {dataset_id}")
-            return dataset
-        except Exception as error:  # noqa: BLE001
-            last_error = error
-            print(f"Failed source {dataset_id}: {error}")
+        dataset = DatasetDict({"train": train_ds, "test": test_ds})
+        print(f"Successfully loaded dataset with streaming from: {dataset_id}")
+        return dataset
+    except Exception as error:  # noqa: BLE001
+        last_error = error
+        print(f"Streaming failed: {error}")
+        print("Falling back to non-streaming mode (will use cache if available)...")
 
-    raise RuntimeError("Unable to load Amazon Polarity dataset from candidate sources.") from last_error
+    # Fallback to non-streaming mode
+    try:
+        print(f"Loading dataset in non-streaming mode: {dataset_id}")
+        train_ds = _materialize_non_stream_subset(dataset_id, "train", train_samples)
+        test_ds = _materialize_non_stream_subset(dataset_id, "test", test_samples)
+
+        dataset = DatasetDict({"train": train_ds, "test": test_ds})
+        print(f"Successfully loaded dataset without streaming from: {dataset_id}")
+        return dataset
+    except Exception as error:  # noqa: BLE001
+        print(f"Non-streaming mode also failed: {error}")
+        raise RuntimeError(
+            f"Unable to load Amazon Polarity dataset from {dataset_id}. "
+            f"Streaming error: {last_error}. Non-streaming error: {error}"
+        ) from error
 
 
 def _materialize_stream_subset(
@@ -197,7 +217,11 @@ def _materialize_stream_subset(
     split_name: str,
     sample_count: int,
 ) -> Dataset:
-    """Stream one split and convert a small subset to an in-memory Dataset."""
+    """Stream one split and convert a small subset to an in-memory Dataset.
+    
+    Uses streaming=True for memory efficiency. If streaming fails due to network
+    issues, the caller will fall back to non-streaming mode.
+    """
     if sample_count <= 0:
         raise ValueError("sample_count must be greater than zero.")
 
@@ -208,6 +232,28 @@ def _materialize_stream_subset(
         raise RuntimeError(f"No rows received for split={split_name} from {dataset_id}.")
 
     return Dataset.from_list(subset_rows)
+
+
+def _materialize_non_stream_subset(
+    dataset_id: str,
+    split_name: str,
+    sample_count: int,
+) -> Dataset:
+    """Load one split and convert a small subset to an in-memory Dataset.
+    
+    Uses streaming=False which will use cached data if available, or download
+    the dataset if not cached. This is the fallback when streaming fails.
+    """
+    if sample_count <= 0:
+        raise ValueError("sample_count must be greater than zero.")
+
+    # Load without streaming - uses cache if available
+    dataset = load_dataset(dataset_id, split=split_name, streaming=False)
+    
+    # Take only the requested number of samples
+    subset = dataset.select(range(min(sample_count, len(dataset))))
+    
+    return subset
 
 
 def prepare_tokenized_datasets(

@@ -1,9 +1,4 @@
-"""Evaluation metrics for binary sentiment classification.
-
-This module provides:
-1) Trainer-compatible metric computation (accuracy, precision, recall, F1),
-2) Detailed research diagnostics (confusion matrix, classification report).
-"""
+"""Metrics computation utilities shared across pipelines."""
 
 from __future__ import annotations
 
@@ -28,10 +23,7 @@ def _to_label_ids(predictions: np.ndarray) -> np.ndarray:
 
 
 def compute_basic_metrics(predictions: np.ndarray, labels: np.ndarray) -> dict[str, float]:
-    """Compute core binary classification metrics using scikit-learn.
-
-    This avoids version incompatibilities with the `evaluate` package API.
-    """
+    """Compute core binary classification metrics using scikit-learn."""
     pred_ids = _to_label_ids(predictions)
     label_ids = np.asarray(labels)
 
@@ -49,13 +41,9 @@ def compute_basic_metrics(predictions: np.ndarray, labels: np.ndarray) -> dict[s
 
 
 def compute_trainer_metrics(eval_pred: Any) -> dict[str, float]:
-    """Compute metrics in the format expected by Hugging Face Trainer.
-
-    Trainer passes a tuple-like object: (predictions, labels).
-    """
+    """Compute metrics in the format expected by Hugging Face Trainer."""
     predictions, labels = eval_pred
 
-    # Some models return predictions as a tuple; first item is logits.
     if isinstance(predictions, tuple):
         predictions = predictions[0]
 
@@ -67,10 +55,7 @@ def compute_detailed_metrics(
     labels: np.ndarray,
     label_names: tuple[str, str] = ("negative", "positive"),
 ) -> dict[str, Any]:
-    """Compute research-grade diagnostics from predictions and labels.
-
-    Returns confusion matrix and classification report in JSON-serializable form.
-    """
+    """Compute research-grade diagnostics from predictions and labels."""
     pred_ids = _to_label_ids(np.asarray(predictions))
     label_ids = np.asarray(labels)
 

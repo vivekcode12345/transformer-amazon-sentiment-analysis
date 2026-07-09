@@ -15,7 +15,7 @@ from transformers import (
 )
 from datasets import DatasetDict
 
-from ..config import PATH_CONFIG, RUNTIME_CONFIG, TEXT_CONFIG, create_project_dirs
+from configs.config import PATH_CONFIG, RUNTIME_CONFIG, TEXT_CONFIG, create_project_dirs
 from .metrics import compute_detailed_metrics, compute_trainer_metrics
 from .model import load_model
 from .preprocessing import (

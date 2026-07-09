@@ -7,7 +7,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel
 
-from ..config import PATH_CONFIG, RUNTIME_CONFIG, TEXT_CONFIG
+from configs.config import PATH_CONFIG, RUNTIME_CONFIG, TEXT_CONFIG
 
 
 def _runtime_device() -> str:

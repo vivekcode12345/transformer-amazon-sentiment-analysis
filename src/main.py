@@ -1,8 +1,7 @@
-"""CLI orchestrator for text-only and multimodal sentiment analysis pipelines.
+"""CLI orchestrator for text-only BERT sentiment analysis pipeline.
 
 This script provides an interactive menu to:
 - Run text-only BERT training (Amazon Reviews)
-- Run multimodal training (image+text) [stub, awaiting image encoder]
 - Evaluate saved models
 - Perform inference on single samples
 - Preview tokenization
@@ -16,15 +15,15 @@ import json
 import sys
 from typing import Any
 
-from config import create_project_dirs, RUNTIME_CONFIG
-from text.preprocessing import (
+from configs.config import create_project_dirs, RUNTIME_CONFIG
+from .text.preprocessing import (
     prepare_tokenized_datasets,
     print_dataset_sizes,
     print_tokenization_preview,
 )
-from text.train import run_training as run_text_training
-from text.evaluation import evaluate_model as evaluate_text_model
-from text.inference import predict_sentiment, print_prediction_result
+from .text.train import run_training as run_text_training
+from .text.evaluation import evaluate_model as evaluate_text_model
+from .text.inference import predict_sentiment, print_prediction_result
 
 
 # ============================================================================
@@ -73,35 +72,6 @@ def _predict_text_flow() -> None:
     print_prediction_result(result)
 
 
-# ============================================================================
-# MULTIMODAL PIPELINE (Stubs)
-# ============================================================================
-
-def _train_multimodal_flow() -> None:
-    """Train multimodal (image+text) model (stub)."""
-    print("Multimodal training: image+text sentiment analysis")
-    print("⚠️  Currently a stub - awaiting image encoder specification.")
-    print("When implemented, will:")
-    print("  1. Load image+text pairs from dataset")
-    print("  2. Encode images using pluggable encoder (CLIP, BLIP, etc.)")
-    print("  3. Fuse image + text embeddings")
-    print("  4. Train classification head")
-    print("\nPlease specify:")
-    print("  - Image encoder (clip, blip, siglip)")
-    print("  - Fusion strategy (concat, attention, cross_modal)")
-    print("  - Multimodal dataset specification")
-
-
-def _evaluate_multimodal_flow() -> None:
-    """Evaluate multimodal model (stub)."""
-    print("Multimodal evaluation (stub)")
-    print("Not yet implemented. Please train a multimodal model first.")
-
-
-def _predict_multimodal_flow() -> None:
-    """Predict sentiment for image+text pair (stub)."""
-    print("Multimodal prediction: image+text (stub)")
-    print("Not yet implemented.")
 
 
 # ============================================================================
@@ -111,20 +81,16 @@ def _predict_multimodal_flow() -> None:
 def _print_menu() -> None:
     """Display main menu."""
     print("\n" + "=" * 60)
-    print("Health Multimodal AI - Sentiment Analysis Orchestrator")
+    print("BERT Sentiment Analysis - Amazon Reviews")
     print("=" * 60)
     print("\nText-Only Pipeline (BERT):")
     print("  1) Quick tokenization preview (small sample)")
     print("  2) Train BERT on Amazon Polarity")
     print("  3) Evaluate saved BERT model")
     print("  4) Predict single review (text-only)")
-    print("\nMultimodal Pipeline (Image+Text) [Coming Soon]:")
-    print("  5) Train multimodal model (stub)")
-    print("  6) Evaluate multimodal model (stub)")
-    print("  7) Predict image+text sentiment (stub)")
     print("\nUtilities:")
-    print("  8) View configuration")
-    print("  9) Exit")
+    print("  5) View configuration")
+    print("  6) Exit")
 
 
 def _print_config() -> None:
@@ -132,7 +98,6 @@ def _print_config() -> None:
     print("\n" + "=" * 60)
     print("Current Configuration")
     print("=" * 60)
-    print(f"Multimodal enabled: {RUNTIME_CONFIG.enable_multimodal}")
     print(f"MPS available: {RUNTIME_CONFIG.use_mps_if_available}")
 
 
@@ -172,18 +137,6 @@ def main(argv: list[str] | None = None) -> int:
             _quick_tokenization_preview()
             return 0
 
-        if cmd in {"multimodal-train"}:
-            _train_multimodal_flow()
-            return 0
-
-        if cmd in {"multimodal-eval", "multimodal-evaluate"}:
-            _evaluate_multimodal_flow()
-            return 0
-
-        if cmd in {"multimodal-predict"}:
-            _predict_multimodal_flow()
-            return 0
-
         # Legacy shortcuts for backward compatibility
         if cmd in {"train", "run"}:
             print("ℹ️  Using legacy 'train' shortcut. Consider 'python main.py text-train' for clarity.")
@@ -210,15 +163,13 @@ def main(argv: list[str] | None = None) -> int:
             print("  text-eval               Evaluate text-only model")
             print("  text-predict <text>     Predict sentiment for text")
             print("  preview                 Quick tokenization preview")
-            print("  multimodal-train        Train multimodal model (stub)")
-            print("  multimodal-eval         Evaluate multimodal model (stub)")
             print("  (Interactive menu if no command provided)")
             return 0
 
     # Interactive menu loop
     while True:
         _print_menu()
-        choice = input("\nSelect an option [1-9]: ").strip()
+        choice = input("\nSelect an option [1-6]: ").strip()
 
         if choice == "1":
             _quick_tokenization_preview()
@@ -229,18 +180,12 @@ def main(argv: list[str] | None = None) -> int:
         elif choice == "4":
             _predict_text_flow()
         elif choice == "5":
-            _train_multimodal_flow()
-        elif choice == "6":
-            _evaluate_multimodal_flow()
-        elif choice == "7":
-            _predict_multimodal_flow()
-        elif choice == "8":
             _print_config()
-        elif choice == "9":
+        elif choice == "6":
             print("Exiting. Goodbye!")
             return 0
         else:
-            print("❌ Invalid selection. Please choose 1-9.")
+            print("❌ Invalid selection. Please choose 1-6.")
 
 
 if __name__ == "__main__":
