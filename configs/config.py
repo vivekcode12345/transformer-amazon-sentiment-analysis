@@ -43,7 +43,7 @@ class TextTrainingConfig:
 
     # Trainer strategy
     evaluation_strategy: str = "epoch"
-    save_strategy: str = "steps"
+    save_strategy: str = "epoch"
     save_steps: int = 1000
     load_best_model_at_end: bool = True
     metric_for_best_model: str = "f1"
