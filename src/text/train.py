@@ -29,9 +29,16 @@ from .preprocessing import (
 
 
 def _runtime_device() -> str:
-    """Pick runtime device: MPS if available, else CPU."""
-    if RUNTIME_CONFIG.use_mps_if_available and torch.backends.mps.is_available():
+    """Pick runtime device: CUDA > MPS > CPU."""
+    if torch.cuda.is_available():
+        return "cuda"
+
+    if (
+        RUNTIME_CONFIG.use_mps_if_available
+        and torch.backends.mps.is_available()
+    ):
         return "mps"
+
     return "cpu"
 
 
