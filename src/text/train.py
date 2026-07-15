@@ -198,8 +198,17 @@ def run_training(
         labels=test_predictions_output.label_ids,
     )
 
-    trainer.save_model(str(PATH_CONFIG.text_best_model_dir))
+    model.save_pretrained(str(PATH_CONFIG.text_best_model_dir))
     tokenizer.save_pretrained(str(PATH_CONFIG.text_tokenizer_dir))
+
+    import os
+    print("\n===== Saved Model Files =====")
+    print("Best model directory:", PATH_CONFIG.text_best_model_dir)
+
+    if os.path.exists(PATH_CONFIG.text_best_model_dir):
+        print(os.listdir(PATH_CONFIG.text_best_model_dir))
+    else:
+        print("Directory does not exist!")
 
     _save_json_metrics(PATH_CONFIG.text_train_metrics_path, train_result.metrics)
     _save_json_metrics(PATH_CONFIG.text_eval_metrics_path, test_detailed_metrics)
