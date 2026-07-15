@@ -49,8 +49,8 @@ def _train_text_flow() -> None:
         return
 
     results = run_text_training(
-        train_samples=100000,
-        test_samples=20000,
+        train_samples=50000,
+        test_samples=10000,
     )
     print("Training finished. Test metrics summary:")
     print(json.dumps(results.get("test", {}), indent=2))
