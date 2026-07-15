@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from configs.config import PATH_CONFIG, TEXT_CONFIG
 from .metrics import compute_detailed_metrics, print_detailed_metrics
-from .model import load_model
 from .preprocessing import (
     prepare_tokenized_datasets,
     load_tokenizer,
     materialize_validation_from_test,
 )
-from transformers import Trainer, TrainingArguments
+from transformers import AutoModelForSequenceClassification, Trainer, TrainingArguments
 
 
 def evaluate_model(train_samples: int = 2000, test_samples: int = 500) -> dict:
@@ -35,12 +34,8 @@ def evaluate_model(train_samples: int = 2000, test_samples: int = 500) -> dict:
     )
 
     # Load fine-tuned model from checkpoint
-    model = load_model()
-    model.load_state_dict(
-        __import__("torch").load(
-            PATH_CONFIG.text_best_model_dir / "pytorch_model.bin",
-            map_location="cpu",
-        )
+    model = AutoModelForSequenceClassification.from_pretrained(
+        PATH_CONFIG.text_best_model_dir
     )
 
     # Run evaluation
