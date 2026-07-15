@@ -48,7 +48,10 @@ def _train_text_flow() -> None:
         print("Training cancelled by user.")
         return
 
-    results = run_text_training()
+    results = run_text_training(
+        train_samples=100000,
+        test_samples=20000,
+    )
     print("Training finished. Test metrics summary:")
     print(json.dumps(results.get("test", {}), indent=2))
 
