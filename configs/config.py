@@ -21,7 +21,7 @@ from pathlib import Path
 class TextTrainingConfig:
     """Hyperparameters for text-only BERT fine-tuning."""
 
-    model_name: str = "roberta-base"
+    model_name: str = "microsoft/deberta-v3-base"
     num_labels: int = 2
     random_seed: int = 42
 
