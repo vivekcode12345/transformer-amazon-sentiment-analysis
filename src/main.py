@@ -43,10 +43,7 @@ def _quick_tokenization_preview() -> None:
 def _train_text_flow() -> None:
     """Train text-only BERT model."""
     print("Text-only training: fine-tune BERT on Amazon Polarity")
-    confirm = input("Proceed with text training? (y/N): ").strip().lower()
-    if confirm != "y":
-        print("Training cancelled by user.")
-        return
+    print("Proceeding with training...")
 
     results = run_text_training(
         train_samples=50000,
