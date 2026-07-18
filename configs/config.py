@@ -21,7 +21,7 @@ from pathlib import Path
 class TextTrainingConfig:
     """Hyperparameters for text-only BERT fine-tuning."""
 
-    model_name = "albert-base-v2"
+    model_name: str = "google/electra-base-discriminator"
     num_labels: int = 2
     random_seed: int = 42
 
