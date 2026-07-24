@@ -1,0 +1,470 @@
+"""
+Logistic Regression Model for Sentiment Analysis
+=================================================
+
+This module implements a Logistic Regression classifier for binary sentiment
+analysis (Positive/Negative) using TF-IDF features.
+
+WHAT IS LOGISTIC REGRESSION?
+Logistic Regression is a simple but powerful linear model for binary classification.
+It learns a linear decision boundary to separate positive and negative reviews.
+
+WHY LOGISTIC REGRESSION?
+- Fast to train and predict
+- Works well with TF-IDF features
+- Provides probability outputs
+- Easy to interpret (can see which words are most important)
+- Great baseline model for text classification
+
+REUSES:
+- Preprocessing from src.traditional_ml.preprocessing
+- Metrics from src.utils.metrics
+"""
+
+from __future__ import annotations
+
+import json  # For saving metrics to JSON file
+from pathlib import Path  # For file path handling
+from typing import Any, Dict, Tuple  # Type hints for better code documentation
+
+# Add project root to path for imports when running as script
+# This allows the script to be run directly: python src/traditional_ml/models/logistic_regression.py
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+import sys
+sys.path.insert(0, str(PROJECT_ROOT))
+
+# Import scikit-learn's LogisticRegression
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
+
+# Import our custom preprocessing pipeline
+# This REUSES the preprocessing module - no duplication!
+from src.traditional_ml.preprocessing import prepare_data_for_training
+
+# Import joblib for saving/loading models
+# joblib is better than pickle for scikit-learn models (handles numpy arrays efficiently)
+import joblib
+
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+# Default hyperparameters for Logistic Regression
+# You can tune these to improve performance
+
+LOGISTIC_REGRESSION_CONFIG = {
+    "C": 1.0,  # Regularization strength (smaller = more regularization)
+    "max_iter": 1000,  # Maximum number of iterations for convergence
+    "solver": "lbfgs",  # Optimization algorithm
+    "class_weight": "balanced",  # Handle imbalanced classes automatically
+    "random_state": 42,  # For reproducibility
+}
+
+# Paths for saving model and results
+MODEL_OUTPUT_DIR = Path("models/traditional_ml/logistic_regression")
+METRICS_OUTPUT_PATH = Path("reports/logistic_regression_metrics.json")
+
+
+# ============================================================================
+# MODEL TRAINING
+# ============================================================================
+
+def train_logistic_regression(
+    sample_limit: int | None = None,
+    test_size: float = 0.2,
+    random_state: int = 42,
+    clean: bool = True,
+) -> Tuple[LogisticRegression, Any, Any, Any, Any, Dict[str, Any]]:
+    """
+    Train a Logistic Regression model for sentiment analysis.
+    
+    This function:
+    1. Loads and preprocesses the data (using our preprocessing pipeline)
+    2. Trains a Logistic Regression model
+    3. Evaluates the model on test data
+    4. Saves the model and metrics
+    
+    Args:
+        sample_limit (int, optional): Limit samples for testing
+        test_size (float): Proportion of data for testing (0.2 = 20%)
+        random_state (int): Random seed for reproducibility
+        clean (bool): Whether to clean text before vectorization
+        
+    Returns:
+        tuple: (model, X_train, X_test, y_train, y_test, metrics)
+            - model: Trained LogisticRegression model
+            - X_train: TF-IDF features for training
+            - X_test: TF-IDF features for testing
+            - y_train: Training labels
+            - y_test: Test labels
+            - metrics: Dictionary with evaluation metrics
+    
+    Example:
+        >>> model, X_train, X_test, y_train, y_test, metrics = train_logistic_regression()
+        >>> print(f"Accuracy: {metrics['accuracy']:.2%}")
+    """
+    
+    print("\n" + "=" * 70)
+    print("LOGISTIC REGRESSION - TRAINING PIPELINE")
+    print("=" * 70)
+    
+    # =========================================================================
+    # STEP 1: Prepare data using our preprocessing pipeline
+    # =========================================================================
+    # This REUSES the preprocessing module - no code duplication!
+    print("\n[Step 1/6] Preparing data with TF-IDF features...")
+    
+    X_train, X_test, y_train, y_test, vectorizer = prepare_data_for_training(
+        sample_limit=sample_limit,
+        test_size=test_size,
+        random_state=random_state,
+        clean=clean,
+    )
+    
+    # =========================================================================
+    # STEP 2: Initialize the Logistic Regression model
+    # =========================================================================
+    print("\n[Step 2/6] Initializing Logistic Regression model...")
+    print(f"   Configuration: {LOGISTIC_REGRESSION_CONFIG}")
+    
+    # Create the model with our hyperparameters
+    model = LogisticRegression(**LOGISTIC_REGRESSION_CONFIG)
+    
+    print(f"   Model: {model.__class__.__name__}")
+    print(f"   Regularization (C): {LOGISTIC_REGRESSION_CONFIG['C']}")
+    print(f"   Max iterations: {LOGISTIC_REGRESSION_CONFIG['max_iter']}")
+    
+    # =========================================================================
+    # STEP 3: Train the model
+    # =========================================================================
+    print("\n[Step 3/6] Training model...")
+    print("   This may take a moment...")
+    
+    # fit() trains the model on the training data
+    # The model learns the relationship between TF-IDF features and sentiment labels
+    model.fit(X_train, y_train)
+    
+    print("   ✓ Training complete!")
+    
+    # =========================================================================
+    # STEP 4: Make predictions on test data
+    # =========================================================================
+    print("\n[Step 4/6] Making predictions on test data...")
+    
+    # predict() returns the predicted class labels (0 or 1)
+    y_pred = model.predict(X_test)
+    
+    # predict_proba() returns the probability for each class
+    # This gives us confidence scores for our predictions
+    y_pred_proba = model.predict_proba(X_test)
+    
+    print(f"   Predicted {len(y_pred)} samples")
+    
+    # =========================================================================
+    # STEP 5: Evaluate the model
+    # =========================================================================
+    print("\n[Step 5/6] Evaluating model performance...")
+    
+    # Calculate all the metrics
+    metrics = evaluate_logistic_regression(y_test, y_pred, y_pred_proba)
+    
+    # Print metrics to console
+    print("\n" + "=" * 70)
+    print("EVALUATION RESULTS")
+    print("=" * 70)
+    print(f"Accuracy:  {metrics['accuracy']:.4f} ({metrics['accuracy']:.2%})")
+    print(f"Precision: {metrics['precision']:.4f} ({metrics['precision']:.2%})")
+    print(f"Recall:    {metrics['recall']:.4f} ({metrics['recall']:.2%})")
+    print(f"F1 Score:  {metrics['f1']:.4f} ({metrics['f1']:.2%})")
+    print("\nConfusion Matrix:")
+    print(metrics['confusion_matrix'])
+    print("\nClassification Report:")
+    print(metrics['classification_report'])
+    print("=" * 70)
+    
+    # =========================================================================
+    # STEP 6: Save model and metrics
+    # =========================================================================
+    print("\n[Step 6/6] Saving model and metrics...")
+    
+    # Create output directories if they don't exist
+    MODEL_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    METRICS_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Save the trained model using joblib
+    # We save both the model AND the vectorizer because we need both for prediction
+    model_path = MODEL_OUTPUT_DIR / "model.pkl"
+    vectorizer_path = MODEL_OUTPUT_DIR / "vectorizer.pkl"
+    
+    joblib.dump(model, model_path)
+    joblib.dump(vectorizer, vectorizer_path)
+    
+    print(f"   ✓ Model saved to: {model_path}")
+    print(f"   ✓ Vectorizer saved to: {vectorizer_path}")
+    
+    # Save metrics to JSON file
+    with METRICS_OUTPUT_PATH.open("w") as f:
+        json.dump(metrics, f, indent=2)
+    
+    print(f"   ✓ Metrics saved to: {METRICS_OUTPUT_PATH}")
+    
+    # =========================================================================
+    # Done!
+    # =========================================================================
+    print("\n" + "=" * 70)
+    print("✓ LOGISTIC REGRESSION TRAINING COMPLETE!")
+    print("=" * 70)
+    print("\nYou can now:")
+    print("1. Load the model: model = joblib.load('models/traditional_ml/logistic_regression/model.pkl')")
+    print("2. Make predictions: model.predict(new_tfidf_features)")
+    print("3. View metrics: reports/logistic_regression_metrics.json")
+    print("=" * 70)
+    
+    # Return everything for further analysis if needed
+    return model, X_train, X_test, y_train, y_test, metrics
+
+
+# ============================================================================
+# MODEL EVALUATION
+# ============================================================================
+
+def evaluate_logistic_regression(
+    y_true: Any,
+    y_pred: Any,
+    y_pred_proba: Any,
+) -> Dict[str, Any]:
+    """
+    Evaluate Logistic Regression model performance.
+    
+    This function computes comprehensive evaluation metrics for the model.
+    
+    Args:
+        y_true: True labels (ground truth)
+        y_pred: Predicted labels (0 or 1)
+        y_pred_proba: Predicted probabilities (from predict_proba)
+        
+    Returns:
+        Dictionary containing all evaluation metrics:
+        - accuracy: Overall accuracy
+        - precision: Precision score
+        - recall: Recall score
+        - f1: F1 score
+        - confusion_matrix: Confusion matrix (2x2)
+        - classification_report: Detailed classification report
+        - confusion_matrix_list: Confusion matrix as list (JSON serializable)
+    
+    Example:
+        >>> metrics = evaluate_logistic_regression(y_test, y_pred, y_pred_proba)
+        >>> print(f"Accuracy: {metrics['accuracy']:.2%}")
+    """
+    
+    print("\nComputing evaluation metrics...")
+    
+    # =========================================================================
+    # Calculate basic metrics
+    # =========================================================================
+    
+    # Accuracy: Percentage of correct predictions
+    # "How often is the model correct?"
+    accuracy = accuracy_score(y_true, y_pred)
+    
+    # Precision: Of all positive predictions, how many were actually positive?
+    # "When the model says positive, how often is it right?"
+    precision = precision_score(y_true, y_pred, zero_division=0)
+    
+    # Recall: Of all actual positives, how many did we find?
+    # "Of all positive reviews, how many did we correctly identify?"
+    recall = recall_score(y_true, y_pred, zero_division=0)
+    
+    # F1 Score: Harmonic mean of precision and recall
+    # "Balanced measure of model performance"
+    f1 = f1_score(y_true, y_pred, zero_division=0)
+    
+    # =========================================================================
+    # Calculate confusion matrix
+    # =========================================================================
+    # Confusion Matrix shows:
+    # - True Negatives (TN): Correctly predicted negative
+    # - False Positives (FP): Negative predicted as positive
+    # - False Negatives (FN): Positive predicted as negative
+    # - True Positives (TP): Correctly predicted positive
+    
+    cm = confusion_matrix(y_true, y_pred)
+    
+    # =========================================================================
+    # Generate classification report
+    # =========================================================================
+    # This provides precision, recall, F1 for each class
+    
+    report = classification_report(
+        y_true,
+        y_pred,
+        target_names=["Negative", "Positive"],
+        output_dict=True,
+        zero_division=0,
+    )
+    
+    report_text = classification_report(
+        y_true,
+        y_pred,
+        target_names=["Negative", "Positive"],
+        output_dict=False,
+        zero_division=0,
+    )
+    
+    # =========================================================================
+    # Package all metrics into a dictionary
+    # =========================================================================
+    
+    metrics = {
+        "accuracy": float(accuracy),
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1": float(f1),
+        "confusion_matrix": cm.tolist(),  # Convert to list for JSON serialization
+        "classification_report": report,
+        "classification_report_text": report_text,
+    }
+    
+    return metrics
+
+
+# ============================================================================
+# PREDICTION FUNCTION
+# ============================================================================
+
+def predict_sentiment(
+    review_text: str,
+    model_path: Path | str = MODEL_OUTPUT_DIR / "model.pkl",
+    vectorizer_path: Path | str = MODEL_OUTPUT_DIR / "vectorizer.pkl",
+) -> Dict[str, Any]:
+    """
+    Predict sentiment for a single review text.
+    
+    This function loads the saved model and vectorizer, then makes a prediction.
+    
+    Args:
+        review_text (str): The review text to analyze
+        model_path (Path): Path to the saved model
+        vectorizer_path (Path): Path to the saved vectorizer
+        
+    Returns:
+        Dictionary with prediction results:
+        - text: Original review text
+        - label: Predicted sentiment (Positive/Negative)
+        - confidence: Confidence score (0-1)
+        - probabilities: Dictionary with probabilities for each class
+    
+    Example:
+        >>> result = predict_sentiment("This product is amazing!")
+        >>> print(result['label'])  # Positive
+        >>> print(result['confidence'])  # 0.95
+    """
+    
+    # =========================================================================
+    # Load the saved model and vectorizer
+    # =========================================================================
+    
+    print("Loading model and vectorizer...")
+    model = joblib.load(model_path)
+    vectorizer = joblib.load(vectorizer_path)
+    
+    # =========================================================================
+    # Vectorize the input text
+    # =========================================================================
+    # The vectorizer converts text to TF-IDF features (same as training)
+    
+    print("Vectorizing input text...")
+    text_tfidf = vectorizer.transform([review_text])
+    
+    # =========================================================================
+    # Make prediction
+    # =========================================================================
+    
+    print("Making prediction...")
+    
+    # Get predicted class (0 or 1)
+    predicted_label_id = model.predict(text_tfidf)[0]
+    
+    # Get probabilities for each class
+    probabilities = model.predict_proba(text_tfidf)[0]
+    
+    # Convert to human-readable format
+    predicted_label = "Positive" if predicted_label_id == 1 else "Negative"
+    confidence = probabilities[predicted_label_id]
+    
+    # =========================================================================
+    # Return results
+    # =========================================================================
+    
+    result = {
+        "text": review_text,
+        "label": predicted_label,
+        "label_id": int(predicted_label_id),
+        "confidence": float(confidence),
+        "probabilities": {
+            "Negative": float(probabilities[0]),
+            "Positive": float(probabilities[1]),
+        },
+    }
+    
+    return result
+
+
+# ============================================================================
+# EXAMPLE USAGE
+# ============================================================================
+
+if __name__ == "__main__":
+    """
+    Example: Train Logistic Regression model and make predictions.
+    
+    This will:
+    1. Load and preprocess the data
+    2. Train a Logistic Regression model
+    3. Evaluate the model
+    4. Save the model and metrics
+    5. Make a sample prediction
+    """
+    
+    print("\n" + "=" * 70)
+    print("LOGISTIC REGRESSION - COMPLETE EXAMPLE")
+    print("=" * 70)
+    
+    # Use a small sample for testing
+    SAMPLE_LIMIT = 1000
+    
+    # Train the model
+    model, X_train, X_test, y_train, y_test, metrics = train_logistic_regression(
+        sample_limit=SAMPLE_LIMIT,
+        test_size=0.2,
+        clean=True,
+    )
+    
+    # Make a sample prediction
+    print("\n" + "=" * 70)
+    print("SAMPLE PREDICTION")
+    print("=" * 70)
+    
+    sample_reviews = [
+        "This product exceeded my expectations! Amazing quality and fast shipping.",
+        "Terrible product. Broke after one week. Complete waste of money.",
+        "It's okay, does what it's supposed to do but nothing special.",
+    ]
+    
+    for review in sample_reviews:
+        print(f"\nReview: {review}")
+        result = predict_sentiment(review)
+        print(f"Prediction: {result['label']} (Confidence: {result['confidence']:.2%})")
+    
+    print("\n" + "=" * 70)
+    print("✓ Example complete!")
+    print("=" * 70)
