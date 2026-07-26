@@ -255,7 +255,7 @@ if __name__ == "__main__":
         model_name="Logistic Regression",
         model_output_dir="models/traditional_ml/logistic_regression_example",
         metrics_output_path="reports/logistic_regression_example_metrics.json",
-        sample_limit=1000,
+        sample_limit=None,  # Use full dataset
         test_size=0.2,
         clean=True,
     )
@@ -275,7 +275,7 @@ if __name__ == "__main__":
         model_name="Linear SVM",
         model_output_dir="models/traditional_ml/linear_svm_example",
         metrics_output_path="reports/linear_svm_example_metrics.json",
-        sample_limit=1000,
+        sample_limit=None,  # Use full dataset
         test_size=0.2,
         clean=True,
         confidence_type="decision_function",  # Explicitly use decision_function
@@ -302,7 +302,7 @@ if __name__ == "__main__":
         model_name="Decision Tree",
         model_output_dir="models/traditional_ml/decision_tree_example",
         metrics_output_path="reports/decision_tree_example_metrics.json",
-        sample_limit=1000,
+        sample_limit=None,  # Use full dataset
         test_size=0.2,
         clean=True,
     )

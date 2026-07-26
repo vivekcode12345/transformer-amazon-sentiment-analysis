@@ -247,9 +247,8 @@ if __name__ == "__main__":
     print("KNN CLASSIFIER - COMPLETE EXAMPLE")
     print("=" * 70)
     
-    # Use a small sample for testing
-    # Change to None for full dataset training (e.g., 50,000 samples)
-    SAMPLE_LIMIT = 1000
+    # Use full dataset for training (set to None for full dataset, or specify a number for testing)
+    SAMPLE_LIMIT = None
     
     # Train the model
     model, vectorizer, metrics, X_train, X_test, y_train, y_test = train_knn_classifier(
