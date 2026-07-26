@@ -168,7 +168,7 @@ def load_amazon_polarity_data(
         pd.DataFrame: DataFrame with 'text' and 'label' columns
         
     Example:
-        >>> df = load_amazon_polarity_data(sample_limit=1000)
+        >>> df = load_amazon_polarity_data(sample_limit=None)
         >>> print(df.head())
            text  label
         0  great product  1
