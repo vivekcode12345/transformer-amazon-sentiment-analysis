@@ -1,0 +1,46 @@
+{
+  "accuracy": 0.865,
+  "precision": 0.9101796407185628,
+  "recall": 0.926829268292683,
+  "f1": 0.918429003021148,
+  "confusion_matrix": [
+    [
+      21,
+      15
+    ],
+    [
+      12,
+      152
+    ]
+  ],
+  "classification_report": {
+    "Negative": {
+      "precision": 0.6363636363636364,
+      "recall": 0.5833333333333334,
+      "f1-score": 0.6086956521739131,
+      "support": 36.0
+    },
+    "Positive": {
+      "precision": 0.9101796407185628,
+      "recall": 0.926829268292683,
+      "f1-score": 0.918429003021148,
+      "support": 164.0
+    },
+    "accuracy": 0.865,
+    "macro avg": {
+      "precision": 0.7732716385410996,
+      "recall": 0.7550813008130082,
+      "f1-score": 0.7635623275975305,
+      "support": 200.0
+    },
+    "weighted avg": {
+      "precision": 0.8608927599346761,
+      "recall": 0.865,
+      "f1-score": 0.8626769998686457,
+      "support": 200.0
+    }
+  },
+  "classification_report_text": "              precision    recall  f1-score   support\n\n    Negative       0.64      0.58      0.61        36\n    Positive       0.91      0.93      0.92       164\n\n    accuracy                           0.86       200\n   macro avg       0.77      0.76      0.76       200\nweighted avg       0.86      0.86      0.86       200\n",
+  "mean_confidence": 0.692742278395491,
+  "note": "Confidence scores are from decision_function(), not probabilities"
+}
