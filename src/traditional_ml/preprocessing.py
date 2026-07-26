@@ -471,7 +471,7 @@ if __name__ == "__main__":
     print("=" * 70)
     
     # Use a small sample for testing
-    SAMPLE_LIMIT = 1000  # Change this to test with more/less data
+    SAMPLE_LIMIT = None  # Change this to test with more/less data
     
     # Run the complete preprocessing pipeline
     X_train_tfidf, X_test_tfidf, y_train, y_test, vectorizer = prepare_data_for_training(
