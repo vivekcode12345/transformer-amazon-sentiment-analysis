@@ -37,6 +37,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # This REUSES your existing code - no duplication!
 from src.dataset_loaders.amazon_reviews_2023 import load_amazon_reviews_2023
 
+# Import Hugging Face datasets for loading amazon_polarity
+from datasets import load_dataset
+
 
 # ============================================================================
 # CONFIGURATION
@@ -158,8 +161,8 @@ def load_amazon_polarity_data(
     """
     Load the Amazon Polarity dataset for traditional ML.
     
-    This function REUSES your existing dataset loader and converts it
-    to a pandas DataFrame format suitable for scikit-learn.
+    This function loads the fancyzhx/amazon_polarity dataset to match
+    the transformer experiments for fair comparison.
     
     Args:
         sample_limit (int, optional): Limit number of samples (for testing)
@@ -179,28 +182,37 @@ def load_amazon_polarity_data(
     print("LOADING AMAZON POLARITY DATASET")
     print("=" * 70)
     
-    # Step 1: Load dataset using your existing loader
-    # This REUSES code from src.dataset_loaders - no duplication!
+    # Step 1: Load dataset from Hugging Face
+    # Using fancyzhx/amazon_polarity to match transformer experiments
     print("\n1. Loading dataset from Hugging Face...")
-    dataset = load_amazon_reviews_2023(sample_limit=sample_limit)
+    print("   Dataset: fancyzhx/amazon_polarity")
     
-    # Step 2: Convert to pandas DataFrame
-    print("2. Converting to pandas DataFrame...")
-    df = dataset.to_pandas()
+    # Load the dataset (has 'train' and 'test' splits)
+    dataset = load_dataset("fancyzhx/amazon_polarity")
     
-    # Step 3: Extract text and create binary labels
-    # The dataset has 'text' column with review text and 'rating' column (1-5 stars)
-    print("3. Extracting text and creating binary labels...")
+    # Step 2: Get train and test splits
+    print("2. Getting train and test splits...")
+    train_data = dataset['train']
+    test_data = dataset['test']
     
-    # Create binary labels from ratings
-    # Rating 4-5 = Positive (1), Rating 1-3 = Negative (0)
-    df['label'] = (df['rating'] >= 4).astype(int)
+    # Sample exactly 50,000 train and 10,000 test samples to match transformer experiments
+    print("   Sampling 50,000 train / 10,000 test samples to match transformer experiments")
+    train_data = train_data.select(range(50000))
+    test_data = test_data.select(range(10000))
     
-    # Create a clean DataFrame with just text and label
-    # This removes all other columns (title, asin, etc.) that we don't need
+    # Step 3: Convert to pandas DataFrame
+    print("3. Converting to pandas DataFrame...")
+    
+    # Combine train and test
+    train_df = train_data.to_pandas()
+    test_df = test_data.to_pandas()
+    
+    # The dataset has 'content' and 'label' columns
+    # Label is already 0 (negative) or 1 (positive)
+    # Use 'content' column for review text
     df_clean = pd.DataFrame({
-        'text': df['text'],  # Use the 'text' column from the dataset
-        'label': df['label']  # Use our newly created binary labels
+        'text': pd.concat([train_df['content'], test_df['content']], ignore_index=True),
+        'label': pd.concat([train_df['label'], test_df['label']], ignore_index=True)
     })
     
     # Step 4: Remove any missing values
@@ -313,14 +325,14 @@ def prepare_data_for_training(
     
     This is the main function you'll use to prepare data for training.
     It does everything:
-    1. Loads the dataset
+    1. Loads the dataset (50k train / 10k test to match transformer experiments)
     2. Cleans the text (optional)
-    3. Splits into train/test
+    3. Uses dataset's native train/test split (no additional splitting)
     4. Creates TF-IDF features
     
     Args:
         sample_limit (int, optional): Limit samples for testing
-        test_size (float): Proportion of data for testing (0.2 = 20%)
+        test_size (float): Proportion of data for testing (unused, kept for compatibility)
         random_state (int): Random seed for reproducibility
         clean (bool): Whether to clean text before TF-IDF
         
@@ -357,18 +369,19 @@ def prepare_data_for_training(
         df['text_cleaned'] = df['text']
         print("\n[Step 2/5] Skipping text cleaning (clean=False)")
     
-    # Step 3: Split into train and test sets
-    print("\n[Step 3/5] Splitting into train and test sets...")
-    print(f"   Test size: {test_size:.0%}")
-    print(f"   Random state: {random_state}")
+    # Step 3: Use dataset's native train/test split (50k train / 10k test)
+    # The dataset already has the correct split to match transformer experiments
+    print("\n[Step 3/5] Using dataset's native train/test split...")
+    print("   (50,000 train / 10,000 test to match transformer experiments)")
     
-    X_train, X_test, y_train, y_test = train_test_split(
-        df['text_cleaned'],      # Features (text)
-        df['label'],             # Labels (0 or 1)
-        test_size=test_size,     # 20% for testing
-        random_state=random_state, # For reproducibility
-        stratify=df['label'],    # Keep same label distribution in train/test
-    )
+    # First 50,000 samples are train, next 10,000 are test
+    train_mask = list(range(50000))
+    test_mask = list(range(50000, 60000))
+    
+    X_train = df['text_cleaned'].iloc[train_mask]
+    X_test = df['text_cleaned'].iloc[test_mask]
+    y_train = df['label'].iloc[train_mask]
+    y_test = df['label'].iloc[test_mask]
     
     print(f"   Training samples: {len(X_train):,}")
     print(f"   Test samples: {len(X_test):,}")
