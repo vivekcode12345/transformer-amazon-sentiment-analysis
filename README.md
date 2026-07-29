@@ -219,10 +219,12 @@ The [Amazon Polarity Dataset](https://huggingface.co/datasets/fancyzhx/amazon_po
 - **Source**: Amazon product reviews across multiple categories
 - **Format**: Review text with binary sentiment labels
 - **Loading**: Streaming mode for memory efficiency with automatic fallback
+- **Total samples**: 60,000 (50,000 train + 10,000 test)
 
 **Label Distribution:**
-- **Class 0**: Negative sentiment
-- **Class 1**: Positive sentiment
+- **Class 0**: Negative sentiment (29,369 samples, 48.9%)
+- **Class 1**: Positive sentiment (30,631 samples, 51.1%)
+- **Balance**: Reasonably balanced (~51% positive)
 
 The dataset is split into:
 - **Training set**: Used for model fine-tuning
@@ -263,11 +265,53 @@ The dataset is split into:
 
 ---
 
+## Experimental Design
+
+### Dataset Split
+
+This project uses the **Amazon Polarity dataset** (`fancyzhx/amazon_polarity`) with the following split:
+
+- **Training set**: 50,000 samples (used for model fine-tuning)
+- **Test set**: 10,000 samples (held-out, never used during training)
+- **Validation set**: 1,000 samples (materialized from test split for BERT training)
+
+**Note**: The BERT model was evaluated on a small validation subset (50 samples) due to streaming mode limitations. For complete evaluation on the full test set, see the Traditional ML baseline (Logistic Regression, 85.14% on 10,000 samples).
+
+### Evaluation Protocol
+
+**BERT Transformer:**
+- Evaluated on validation subset (n=50) materialized during training
+- Metrics: Accuracy, Precision, Recall, F1 Score
+- Best model selected based on validation loss
+
+**Traditional ML Models:**
+- Logistic Regression: Evaluated on full test set (n=10,000)
+- Other models: Preliminary evaluation on 200 samples (full evaluation pending)
+- Metrics: Accuracy, Precision, Recall, F1 Score
+- 5-fold cross-validation recommended for future work
+
+### Reproducibility
+
+- **Random seed**: 42 (fixed for all train/test splits)
+- **Dataset source**: Hugging Face Hub (`fancyzhx/amazon_polarity`)
+- **Training runtime**: ~57.67 seconds (BERT, 3 epochs)
+- **Hardware**: CPU (MPS/GPU recommended for faster training)
+
+### Limitations
+
+- **BERT evaluation**: Results based on small validation subset (n=50), not full test set
+- **Traditional ML**: Only Logistic Regression evaluated on full test set; other models show preliminary results
+- **Dataset scope**: Results specific to Amazon Polarity dataset; generalization to other domains untested
+- **Class imbalance**: Dataset is reasonably balanced (~51% positive), but slight imbalance may affect metrics
+- **Computational resources**: BERT training on CPU is slow; GPU recommended for production training
+
+---
+
 ## Results
 
 ### BERT Transformer Model
 
-The fine-tuned BERT model was evaluated on the held-out test set. Below are the performance metrics:
+The fine-tuned BERT model was evaluated on a validation subset. Below are the performance metrics:
 
 | Metric | Score |
 |--------|-------|
@@ -275,6 +319,10 @@ The fine-tuned BERT model was evaluated on the held-out test set. Below are the 
 | **Precision** | 65.85% |
 | **Recall** | 96.43% |
 | **F1 Score** | 78.26% |
+
+**Evaluation Details:**
+- **Test set size**: 50 samples (validation subset materialized during training)
+- **Note**: This is a small validation subset, not the full 10,000 sample test set
 
 #### Metrics Explanation
 
@@ -289,26 +337,33 @@ The fine-tuned BERT model was evaluated on the held-out test set. Below are the 
 - The model shows strong performance on the positive class with 96.43% recall
 - Confusion matrix shows 27/28 positive reviews correctly classified vs 8/22 negative reviews
 
+**⚠️ Important Note:** These results are based on a small validation subset (n=50). Performance on the full test set (10,000 samples) may differ. For a fair comparison with traditional ML models, full test set evaluation is recommended.
+
 ### Traditional ML Models (Baseline Comparison)
 
 Seven traditional machine learning models were trained using TF-IDF features for comparison:
 
-| Model | Accuracy | Precision | Recall | F1 Score |
-|-------|----------|-----------|--------|----------|
-| **Logistic Regression** | ~85% | ~86% | ~85% | ~85% |
-| **Linear SVM** | ~85% | ~86% | ~85% | ~85% |
-| **Multinomial Naive Bayes** | ~83% | ~84% | ~83% | ~83% |
-| **Random Forest** | ~82% | ~83% | ~82% | ~82% |
-| **SGD Classifier** | ~85% | ~86% | ~85% | ~85% |
-| **KNN Classifier** | ~78% | ~79% | ~78% | ~78% |
-| **Decision Tree** | ~75% | ~76% | ~75% | ~75% |
+| Model | Accuracy | Test Size | Status |
+|-------|----------|-----------|--------|
+| **Logistic Regression** | **85.14%** | 10,000 | ✅ Full evaluation |
+| Linear SVM | 86.50% | 200 | ⚠️ Preliminary |
+| SGD Classifier | 86.00% | 200 | ⚠️ Preliminary |
+| Multinomial Naive Bayes | 82.00% | 200 | ⚠️ Preliminary |
+| Random Forest | 76.00% | 200 | ⚠️ Preliminary |
+| KNN Classifier | 86.00% | 200 | ⚠️ Preliminary |
+| Decision Tree | 74.50% | 200 | ⚠️ Preliminary |
 
 **Key Findings:**
-- Traditional ML models achieve **higher accuracy (~85%)** than BERT (~70%) on this dataset
-- TF-IDF + linear models (Logistic Regression, SVM) perform exceptionally well
-- BERT's lower performance may be due to the small test set (50 samples) or domain mismatch
-- Traditional models are **faster to train** and **more interpretable**
-- BERT offers better generalization potential with larger datasets
+- **Logistic Regression** (85.14% on 10k test) demonstrates that TF-IDF + linear models achieve strong performance
+- Traditional ML models are **faster to train** and **more interpretable** than transformers
+- BERT's performance (70% on 50 samples) may improve with full test set evaluation
+- Only Logistic Regression has been evaluated on the complete test set (10,000 samples)
+- Other models show preliminary results on 200 samples and require full evaluation
+
+**Important Notes:**
+- ⚠️ **Comparison Limitation**: BERT was evaluated on 50 samples (validation subset), while Logistic Regression was evaluated on 10,000 samples. Direct comparison is not scientifically valid.
+- ⚠️ **Preliminary Results**: Models marked with ⚠️ were tested on 200 samples only. Full evaluation on 10,000 samples may yield different results.
+- ✅ **Validated Result**: Logistic Regression's 85.14% accuracy on 10,000 samples is the only reliable traditional ML baseline for comparison.
 
 **Dataset Used:**
 - Source: [fancyzhx/amazon_polarity](https://huggingface.co/datasets/fancyzhx/amazon_polarity)
@@ -319,8 +374,6 @@ Seven traditional machine learning models were trained using TF-IDF features for
 ---
 
 ## Confusion Matrix
-
-![Confusion Matrix](images/confusion_matrix.png)
 
 **Confusion Matrix Breakdown:**
 - **True Negatives**: 8 (correctly predicted negative reviews)
@@ -489,22 +542,6 @@ The pipeline automatically adapts to different models using Hugging Face's `Auto
 - **Model Ensembling**: Combine multiple models for better accuracy
 - **Experiment Tracking**: Integrate Weights & Biases or MLflow for experiment management
 - **ONNX Export**: Optimize model for production deployment
-
----
-
-## Screenshots
-
-### Training Pipeline
-![Training Screenshot](images/training_screenshot.png)
-
-### Loss Curves
-![Loss Curves](images/loss_curves.png)
-
-### Confusion Matrix
-![Confusion Matrix](images/confusion_matrix.png)
-
-### Prediction Output
-![Prediction Output](images/prediction_output.png)
 
 ---
 
