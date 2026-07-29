@@ -1,44 +1,44 @@
 {
-  "accuracy": 0.8506666666666667,
-  "precision": 0.8568840579710145,
-  "recall": 0.8493307215148547,
-  "f1": 0.853090670601738,
+  "accuracy": 0.8514,
+  "precision": 0.8480964224220394,
+  "recall": 0.8649756097560976,
+  "f1": 0.85645285935085,
   "confusion_matrix": [
     [
-      5005,
-      869
+      4081,
+      794
     ],
     [
-      923,
-      5203
+      692,
+      4433
     ]
   ],
   "classification_report": {
     "Negative": {
-      "precision": 0.8442982456140351,
-      "recall": 0.8520599250936329,
-      "f1-score": 0.8481613285883749,
-      "support": 5874.0
+      "precision": 0.8550178085061806,
+      "recall": 0.8371282051282052,
+      "f1-score": 0.8459784411276948,
+      "support": 4875.0
     },
     "Positive": {
-      "precision": 0.8568840579710145,
-      "recall": 0.8493307215148547,
-      "f1-score": 0.853090670601738,
-      "support": 6126.0
+      "precision": 0.8480964224220394,
+      "recall": 0.8649756097560976,
+      "f1-score": 0.85645285935085,
+      "support": 5125.0
     },
-    "accuracy": 0.8506666666666667,
+    "accuracy": 0.8514,
     "macro avg": {
-      "precision": 0.8505911517925249,
-      "recall": 0.8506953233042438,
-      "f1-score": 0.8506259995950565,
-      "support": 12000.0
+      "precision": 0.85155711546411,
+      "recall": 0.8510519074421514,
+      "f1-score": 0.8512156502392725,
+      "support": 10000.0
     },
     "weighted avg": {
-      "precision": 0.8507233028222732,
-      "recall": 0.8506666666666667,
-      "f1-score": 0.8506777576861968,
-      "support": 12000.0
+      "precision": 0.8514705981380583,
+      "recall": 0.8514,
+      "f1-score": 0.8513465804670617,
+      "support": 10000.0
     }
   },
-  "classification_report_text": "              precision    recall  f1-score   support\n\n    Negative       0.84      0.85      0.85      5874\n    Positive       0.86      0.85      0.85      6126\n\n    accuracy                           0.85     12000\n   macro avg       0.85      0.85      0.85     12000\nweighted avg       0.85      0.85      0.85     12000\n"
+  "classification_report_text": "              precision    recall  f1-score   support\n\n    Negative       0.86      0.84      0.85      4875\n    Positive       0.85      0.86      0.86      5125\n\n    accuracy                           0.85     10000\n   macro avg       0.85      0.85      0.85     10000\nweighted avg       0.85      0.85      0.85     10000\n"
 }

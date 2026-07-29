@@ -33,10 +33,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Import the dataset loader from your existing code
-# This REUSES your existing code - no duplication!
-from src.dataset_loaders.amazon_reviews_2023 import load_amazon_reviews_2023
-
 # Import Hugging Face datasets for loading amazon_polarity
 from datasets import load_dataset
 
