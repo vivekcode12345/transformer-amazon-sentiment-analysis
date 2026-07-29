@@ -10,6 +10,19 @@
 
 A systematic comparison of transformer-based and traditional machine learning approaches for binary sentiment classification on the Amazon Polarity dataset. This project evaluates five Hugging Face transformer models against seven traditional ML baselines using identical data splits and evaluation protocols.
 
+## 🚀 Quick Highlights
+
+- Compared **5 Transformer models** (ELECTRA, BERT, RoBERTa, ALBERT, DistilBERT)
+- Benchmarked against **7 Traditional ML algorithms**
+- 🏆 **Overall Best Transformer**: ELECTRA-base
+- 🎯 **Best Accuracy**: 95.75%
+- ⭐ **Best F1 Score**: 95.75%
+- ⚡ **Best Lightweight Model**: DistilBERT (66M parameters)
+- 🏅 **Best Traditional Baseline**: Logistic Regression (85.20%)
+- 📈 **~10.55 percentage-point improvement** over traditional ML
+- 🔄 **Unified Hugging Face Transformer Pipeline**
+- 📊 **Amazon Polarity Dataset** (60,000 samples)
+
 ---
 
 ## Project Overview
@@ -132,6 +145,36 @@ Amazon Research/
 
 ---
 
+## Architecture
+
+### Pipeline Overview
+
+```mermaid
+flowchart LR
+    A[Amazon Reviews] --> B[Dataset Loader]
+    B --> C[Text Preprocessing]
+    C --> D[Tokenizer]
+    D --> E[Transformer Backbone]
+    E --> F[Fine-Tuning]
+    F --> G[Evaluation]
+    G --> H[Sentiment Prediction]
+    
+    style A fill:#e1f5ff
+    style H fill:#c8e6c9
+    style E fill:#fff9e1
+```
+
+**Pipeline Components:**
+1. **Dataset Loader**: Streams Amazon Polarity dataset from Hugging Face Hub
+2. **Text Preprocessing**: Cleans and normalizes review text
+3. **Tokenizer**: Converts text to model-specific token IDs (WordPiece/BPE)
+4. **Transformer Backbone**: Pretrained model (BERT, RoBERTa, ELECTRA, etc.)
+5. **Fine-Tuning**: Trains model on sentiment classification task
+6. **Evaluation**: Measures accuracy, precision, recall, F1 on held-out test set
+7. **Sentiment Prediction**: Classifies new reviews as Positive/Negative
+
+---
+
 ## Model Architecture
 
 ### Transformer Models
@@ -199,6 +242,8 @@ All transformer models use the **same training procedure** with only the model b
 - **Max Sequence Length**: 128 tokens
 - **Random Seed**: 42
 
+> **💡 Pro Tip:** The unified training pipeline allows you to switch between transformer models by changing only the `model_name` in `configs/config.py`. All other training logic remains identical, ensuring fair comparison.
+
 **Training Process:**
 1. Load Amazon Polarity dataset from Hugging Face Hub (streaming mode)
 2. Tokenize text using model-specific tokenizer
@@ -207,9 +252,9 @@ All transformer models use the **same training procedure** with only the model b
 5. Evaluate on held-out test set
 
 **Reproducibility:**
-- Fixed random seeds for all operations
-- Documented hyperparameters in `configs/config.py`
-- Training runtime: ~57.67 seconds (BERT, 3 epochs, CPU)
+- ✅ Fixed random seeds for all operations
+- ✅ Documented hyperparameters in `configs/config.py`
+- ✅ Training runtime: ~57.67 seconds (BERT, 3 epochs, CPU)
 
 ---
 
@@ -245,22 +290,23 @@ All models (transformers and traditional ML) use:
 
 ## Results
 
-### Benchmark: Transformer Models
+### 🏆 Transformer Models Benchmark
 
-| Model | Accuracy | Precision | Recall | F1 Score |
-|-------|----------:|----------:|--------:|---------:|
-| **ELECTRA-base** | **95.75%** | **95.75%** | **95.75%** | **95.75%** |
-| **BERT-base** | 95.75% | 95.52% | 96.21% | 95.87% |
-| **RoBERTa-base** | 95.60% | 95.60% | 95.60% | 95.60% |
-| **ALBERT-base-v2** | 94.61% | 95.32% | 94.11% | 94.71% |
-| **DistilBERT** | 93.94% | 94.30% | 93.90% | 94.10% |
+| Rank | Model | Accuracy | Precision | Recall | F1 Score |
+|:----:|-------|----------:|----------:|--------:|---------:|
+| 🥇 1st | **ELECTRA-base** | **95.75%** | **95.75%** | **95.75%** | **95.75%** |
+| 🥈 2nd | **RoBERTa-base** | 95.60% | 95.60% | 95.60% | 95.60% |
+| 🥉 3rd | **BERT-base** | **94.67%** | **94.81%** | **94.79%** | **94.80%** |
+| 4️⃣ 4th | **ALBERT-base-v2** | 94.61% | 95.32% | 94.11% | 94.71% |
+| 5️⃣ 5th | **DistilBERT** | 93.94% | 94.30% | 93.90% | 94.10% |
 
 **Key Findings:**
-- All transformer models achieve **>93% accuracy** on the test set
-- **ELECTRA-base** and **BERT-base** tie for best accuracy (95.75%)
-- **BERT-base** achieves best F1 score (95.87%) due to higher recall (96.21%)
-- **DistilBERT** (66M parameters) performs competitively despite being 40% smaller
-- **ALBERT-base-v2** (12M parameters) achieves 94.61% accuracy with parameter-sharing
+- ✅ All transformer models achieve **>93% accuracy** on the test set
+- 🏆 **ELECTRA-base** achieves 🎯 **best accuracy** (95.75%) and ⭐ **best F1 score** (95.75%)
+- 🥈 **RoBERTa-base** achieves second-best performance (95.60% accuracy, 95.60% F1)
+- 🥉 **BERT-base** achieves third-best performance (94.67% accuracy, 94.80% F1)
+- ⚡ **DistilBERT** (66M parameters) performs competitively despite being 40% smaller
+- 💡 **ALBERT-base-v2** (12M parameters) achieves 94.61% accuracy with parameter-sharing
 
 ### Benchmark: Traditional ML Models
 
@@ -285,16 +331,40 @@ All models (transformers and traditional ML) use:
 
 | Category | Best Model | Accuracy | F1 Score |
 |----------|-----------|----------|----------|
-| **Overall Best** | ELECTRA-base / BERT-base | **95.75%** | **95.87%** |
-| **Best Transformer** | BERT-base | 95.75% | **95.87%** |
+| **Overall Best** | ELECTRA-base | **95.75%** | **95.75%** |
+| **Best Transformer** | ELECTRA-base | **95.75%** | **95.75%** |
 | **Best Traditional ML** | Logistic Regression | **85.20%** | **85.70%** |
 | **Best Lightweight Model** | DistilBERT | 93.94% | 94.10% |
 | **Best Parameter-Efficient** | ALBERT-base-v2 | 94.61% | 94.71% |
 
 **Performance Gap:**
 - Transformers outperform traditional ML by **~10-11 percentage points** in accuracy
-- Best transformer (BERT, 95.75%) vs best traditional (Logistic Regression, 85.20%)
-- F1 score gap: **~10 percentage points** (95.87% vs 85.70%)
+- Best transformer (ELECTRA-base, 95.75%) vs best traditional (Logistic Regression, 85.20%)
+- F1 score gap: **~10 percentage points** (95.75% vs 85.70%)
+
+---
+
+## Performance Comparison
+
+### Transformer Models Accuracy
+
+```mermaid
+xychart-beta
+    title "Transformer Models - Accuracy Comparison"
+    x-axis [ELECTRA, RoBERTa, BERT, ALBERT, DistilBERT]
+    y-axis "Accuracy (%)" 90 --> 100
+    bar [95.75, 95.60, 94.67, 94.61, 93.94]
+```
+
+### Traditional ML Models Accuracy
+
+```mermaid
+xychart-beta
+    title "Traditional ML Models - Accuracy Comparison"
+    x-axis [Logistic Regression, SGD, Linear SVM, Naive Bayes, Random Forest, Decision Tree, KNN]
+    y-axis "Accuracy (%)" 65 --> 90
+    bar [85.20, 84.94, 84.60, 82.62, 79.80, 71.44, 69.01]
+```
 
 ---
 
